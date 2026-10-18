@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Nova — Personal Assistant</title>
+<meta name="color-scheme" content="dark" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0b0b11;
+    --nav: #12131a;
+    --line: rgba(255, 255, 255, 0.06);
+    --text: #ffffff;
+    --muted: #a3a3b2;
+    --link: #c8c8d4;
+    --violet: #7c4dff;
+    --violet-2: #8f66ff;
+    --nav-h: 62px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--text); }
+  body {
+    font-family: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* ---------- NAV ---------- */
+  .nav {
+    position: fixed; inset: 0 0 auto 0; z-index: 20;
+    height: var(--nav-h);
+    background: rgba(18, 19, 26, 0.86);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    max-width: 1344px; height: 100%; margin: 0 auto;
+    padding: 0 68px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { display: flex; align-items: center; gap: 11px; font-weight: 600; font-size: 21px; letter-spacing: -0.01em; }
+  .brand-orb {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, #c9b8ff 0%, #8b6cff 38%, #5b3df0 72%, #3a24b8 100%);
+    box-shadow: 0 0 14px rgba(124, 77, 255, 0.55), inset -2px -3px 6px rgba(20, 8, 70, 0.55);
+  }
+  .nav-right { display: flex; align-items: center; gap: 30px; }
+  .nav-links { display: flex; gap: 38px; font-size: 14px; font-weight: 500; color: var(--link); }
+  .nav-links a { transition: color .2s; }
+  .nav-links a:hover { color: #fff; }
+  .btn-open {
+    background: #fff; color: #0b0b11; font-weight: 600; font-size: 14px;
+    padding: 10px 19px; border-radius: 999px; transition: transform .2s, box-shadow .2s;
+  }
+  .btn-open:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,255,255,.15); }
+  .menu-btn {
+    display: none; width: 40px; height: 40px; border-radius: 12px;
+    background: rgba(255,255,255,.06); border: 1px solid var(--line); color: #fff;
+    align-items: center; justify-content: center; cursor: pointer;
+  }
+  .menu-btn span, .menu-btn span::before, .menu-btn span::after {
+    display: block; width: 16px; height: 1.6px; background: #fff; border-radius: 2px; position: relative; transition: .25s;
+  }
+  .menu-btn span::before, .menu-btn span::after { content: ""; position: absolute; left: 0; }
+  .menu-btn span::before { top: -5px; } .menu-btn span::after { top: 5px; }
+  .nav.open .menu-btn span { background: transparent; }
+  .nav.open .menu-btn span::before { top: 0; transform: rotate(45deg); }
+  .nav.open .menu-btn span::after { top: 0; transform: rotate(-45deg); }
+  .mobile-panel {
+    display: none; position: absolute; top: calc(var(--nav-h) + 8px); left: 16px; right: 16px;
+    background: rgba(20, 21, 30, .96); border: 1px solid var(--line); border-radius: 18px;
+    padding: 8px; flex-direction: column;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5);
+  }
+  .mobile-panel a { padding: 14px 16px; border-radius: 12px; font-weight: 500; color: var(--link); }
+  .mobile-panel a:hover { background: rgba(255,255,255,.05); color: #fff; }
+  .nav.open .mobile-panel { display: flex; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    position: relative; min-height: 100vh; min-height: 100svh;
+    overflow: hidden; isolation: isolate;
+  }
+  #stage {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    display: block; z-index: 0; touch-action: pan-y;
+  }
+  /* faint vertical sheen lines like the reference backdrop */
+  .hero::after {
+    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.012) 0 1px, transparent 1px 7px),
+      radial-gradient(120% 80% at 50% 0%, transparent 55%, rgba(0,0,0,.45) 100%);
+  }
+  .hero-inner {
+    position: relative; z-index: 2; pointer-events: none;
+    max-width: 1344px; margin: 0 auto; min-height: inherit;
+    padding: calc(var(--nav-h) + 40px) 68px 80px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .copy { max-width: 600px; pointer-events: auto; }
+  h1 {
+    font-size: clamp(40px, 5.1vw, 70px);
+    line-height: 1.04; font-weight: 700; letter-spacing: -0.025em;
+  }
+  .sub {
+    margin-top: 26px; color: var(--muted);
+    font-size: clamp(17px, 1.65vw, 22px); line-height: 1.55; font-weight: 400;
+  }
+  .btn-try {
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-top: 36px; height: 59px; padding: 0 38px; border-radius: 999px;
+    background: linear-gradient(180deg, var(--violet-2), var(--violet));
+    color: #fff; font-weight: 600; font-size: 20px; letter-spacing: -0.005em;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.22);
+    transition: transform .25s, box-shadow .25s;
+  }
+  .btn-try:hover { transform: translateY(-2px); filter: brightness(1.08); }
+
+  .reveal { opacity: 0; transform: translateY(18px); animation: rise .9s cubic-bezier(.2,.7,.2,1) forwards; }
+  .reveal.d1 { animation-delay: .08s; } .reveal.d2 { animation-delay: .2s; } .reveal.d3 { animation-delay: .32s; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  .loader {
+    position: absolute; z-index: 2; pointer-events: none;
+    width: 46px; height: 46px; border-radius: 50%;
+    border: 2px solid rgba(143,102,255,.18); border-top-color: #8f66ff;
+    animation: spin 1s linear infinite; transition: opacity .5s;
+    transform: translate(-50%, -50%);
+  }
+  .loader.hide { opacity: 0; }
+  @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 1100px) {
+    .nav-inner, .hero-inner { padding-left: 40px; padding-right: 40px; }
+    .nav-links { gap: 26px; }
+  }
+  @media (max-width: 860px) {
+    .nav-links { display: none; }
+    .menu-btn { display: inline-flex; }
+    .nav-right { gap: 10px; }
+    .hero-inner {
+      justify-content: flex-end; text-align: center; align-items: center;
+      padding: calc(var(--nav-h) + 20px) 24px 56px;
+    }
+    .copy { max-width: 560px; }
+    h1 { font-size: clamp(36px, 9.2vw, 56px); }
+    .sub { margin-top: 16px; }
+    .btn-try { margin-top: 26px; }
+  }
+  @media (max-width: 480px) {
+    .nav-inner { padding: 0 16px; }
+    .hero-inner { padding: calc(var(--nav-h) + 16px) 16px 40px; }
+    .brand { font-size: 19px; }
+    .btn-open { padding: 9px 15px; font-size: 13px; }
+    .btn-try { height: 54px; padding: 0 32px; font-size: 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { animation: none; opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#"><span class="brand-orb"></span>Nova</a>
+    <div class="nav-right">
+      <nav class="nav-links">
+        <a href="#">Features</a>
+        <a href="#">Community</a>
+        <a href="#">Twitter</a>
+        <a href="#">Docs</a>
+      </nav>
+      <a class="btn-open" href="#">Open App</a>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false"><span></span></button>
+    </div>
+    <div class="mobile-panel">
+      <a href="#">Features</a>
+      <a href="#">Community</a>
+      <a href="#">Twitter</a>
+      <a href="#">Docs</a>
+    </div>
+  </div>
+</header>
+
+<main class="hero" id="hero">
+  <canvas id="stage" aria-hidden="true"></canvas>
+  <div class="loader" id="loader"></div>
+  <div class="hero-inner">
+    <div class="copy">
+      <h1 class="reveal d1">Meet Your New<br />Personal Assistant</h1>
+      <p class="sub reveal d2">Simple to use. Intuitive to navigate.<br />Powerful in every interaction.</p>
+      <a class="btn-try reveal d3" href="#">Try it now</a>
+    </div>
+  </div>
+</main>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { mergeVertices } from "three/addons/utils/BufferGeometryUtils.js";
+
+/* 3D models generated with Higgsfield (Meshy multi-view / image-to-3D) */
+const HEAD_GLB = "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20261018_172206_0181329a-86e2-41c9-8ab8-c496f29aaa53.glb";
+const ARM_GLB  = "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20261018_172137_cd6086ec-07ef-44dc-bd15-95a450ddaa8c.glb";
+
+/* ---------- mobile menu ---------- */
+const nav = document.getElementById("nav");
+const menuBtn = document.getElementById("menuBtn");
+menuBtn.addEventListener("click", () => {
+  const open = nav.classList.toggle("open");
+  menuBtn.setAttribute("aria-expanded", open);
+});
+
+/* ---------- renderer / scene ---------- */
+const hero = document.getElementById("hero");
+const canvas = document.getElementById("stage");
+const loaderEl = document.getElementById("loader");
+const BG = new THREE.Color("#0b0b11");
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.background = BG;
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+
+
+const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 100);
+camera.position.set(0, 0, 10);
+
+/* lights: the studio env gives the glossy highlights; a diffuse hemisphere lifts the
+   charcoal shell (no specular, so the black visor stays black) and a soft key adds shape */
+scene.add(new THREE.HemisphereLight(0xdcd8f0, 0x1a0f3a, 2.3));
+const key = new THREE.DirectionalLight(0xffffff, 0.55);
+key.position.set(-3, 4, 5);
+scene.add(key);
+
+/* post: bloom for glowing eyes / antenna tips / rims */
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.55, 0.4, 0.92);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+/* ---------- helpers ---------- */
+function radialTexture(stops, size = 256) {
+  const c = document.createElement("canvas");
+  c.width = c.height = size;
+  const g = c.getContext("2d");
+  const grd = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  stops.forEach(([o, col]) => grd.addColorStop(o, col));
+  g.fillStyle = grd;
+  g.fillRect(0, 0, size, size);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+/* dark studio environment: softboxes on black → crisp highlights on glossy black plastic */
+function studioEnv() {
+  const env = new THREE.Scene();
+  env.background = new THREE.Color(0x030305);
+  const ball = new THREE.SphereGeometry(0.5, 32, 16);
+  const panel = (w, h, pos, color, k) => {
+    const m = new THREE.Mesh(ball, new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(k) }));
+    m.position.set(...pos); m.lookAt(0, 0, 0); m.scale.set(w, h, 0.3); env.add(m);
+  };
+  panel(5, 3.2, [-3, 4.5, 4], 0xffffff, 3.2);   // key softbox, top-left
+  panel(1.2, 6, [6, 0.5, 2], 0xffffff, 1.1);    // strip, right
+  panel(3, 1, [1.5, 5, -1], 0xffffff, 0.8);     // top
+  panel(4, 5, [-5, 0, -4], 0x7c4dff, 1.0);      // violet back-left
+  panel(4, 5, [5, 0, -4], 0x7c4dff, 1.0);       // violet back-right
+  panel(6, 3, [0, -5, 1], 0x5b30ff, 0.35);      // violet floor bounce
+  return pmrem.fromScene(env, 0.02).texture;
+}
+scene.environment = studioEnv();
+scene.environmentIntensity = 1.0;
+
+const glowTex = radialTexture([[0, "rgba(160,120,255,1)"], [0.25, "rgba(124,77,255,.55)"], [0.6, "rgba(90,50,230,.12)"], [1, "rgba(60,30,200,0)"]]);
+
+/* fresnel rim shell — gives the lavender edge light seen on head & arms */
+function rimMaterial(color, power, strength) {
+  return new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: new THREE.Color(color) }, uPower: { value: power }, uStrength: { value: strength } },
+    vertexShader: `
+      varying vec3 vN; varying vec3 vV;
+      void main(){
+        vec4 mv = modelViewMatrix * vec4(position,1.0);
+        vN = normalize(normalMatrix * normal);
+        vV = normalize(-mv.xyz);
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: `
+      uniform vec3 uColor; uniform float uPower; uniform float uStrength;
+      varying vec3 vN; varying vec3 vV;
+      void main(){
+        float f = pow(1.0 - max(dot(normalize(vN), normalize(vV)), 0.0), uPower);
+        gl_FragColor = vec4(uColor * f * uStrength, f);
+      }`,
+    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+  });
+}
+
+/* normalise a loaded GLB: centre it and make the main sphere radius ~1 */
+function prepareModel(root, { glossy, rim, tint, useMap = true, smooth = false }) {
+  root.updateMatrixWorld(true);
+  const meshes = [];
+  root.traverse((o) => { if (o.isMesh) meshes.push(o); });
+  meshes.forEach((o) => {
+    if (smooth) {
+      const g = o.geometry.clone();
+      g.deleteAttribute("normal");
+      ["uv", "uv1", "tangent", "color"].forEach((a) => g.attributes[a] && g.deleteAttribute(a));
+      o.geometry = mergeVertices(g, 1e-3);
+      o.geometry.computeVertexNormals();
+    }
+    const src = Array.isArray(o.material) ? o.material[0] : o.material;
+    o.material = new THREE.MeshPhysicalMaterial({
+      map: useMap ? src.map || null : null,
+      color: new THREE.Color(tint),
+      metalness: glossy ? 0.1 : 0.0,
+      roughness: glossy ? 0.3 : 0.48,
+      clearcoat: glossy ? 1.0 : 0.3,
+      clearcoatRoughness: glossy ? 0.16 : 0.4,
+      envMapIntensity: glossy ? 0.9 : 0.55,
+    });
+    if (rim) {
+      const shell = new THREE.Mesh(o.geometry, rimMaterial(rim.color, rim.power, rim.strength));
+      shell.renderOrder = 2;
+      o.add(shell);
+    }
+  });
+  return root;
+}
+
+/* ---------- robot rig ---------- */
+const robot = new THREE.Group();          // whole character (floats/bobs)
+const body = new THREE.Group();           // turns partially toward cursor (carries arms)
+const head = new THREE.Group();           // turns fully toward cursor
+robot.add(body);
+body.add(head);
+scene.add(robot);
+
+/* background haze + floor glow */
+const haze = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0x7a55ff, transparent: true, opacity: 0.06, depthWrite: false, toneMapped: false, blending: THREE.AdditiveBlending }));
+haze.scale.set(7.5, 7.5, 1);
+haze.position.set(0, 0.1, -3);
+scene.add(haze);
+
+const floorGlow = new THREE.Mesh(
+  new THREE.PlaneGeometry(1, 1),
+  new THREE.MeshBasicMaterial({ map: glowTex, color: 0x8f6bff, transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending })
+);
+floorGlow.position.set(0, -2.05, -0.6);
+floorGlow.scale.set(3.4, 0.42, 1);
+scene.add(floorGlow);
+
+/* eyes — built procedurally so they can track the cursor */
+const eyes = [];
+function buildEye() {
+  const g = new THREE.Group();
+  const halo = new THREE.Mesh(new THREE.CircleGeometry(0.42, 48),
+    new THREE.MeshBasicMaterial({ map: glowTex, color: 0x8a5cff, transparent: true, opacity: 0.24, depthWrite: false, blending: THREE.AdditiveBlending }));
+  halo.position.z = -0.004;
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.168, 0.212, 64),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(1.1, 0.88, 2.0) }));     // slightly HDR → soft bloom
+  const irisTex = radialTexture([[0, "#d7c9ff"], [0.45, "#a07bff"], [0.8, "#7646f2"], [1, "#5c2fe0"]]);
+  const iris = new THREE.Mesh(new THREE.CircleGeometry(0.17, 64),
+    new THREE.MeshBasicMaterial({ map: irisTex, color: new THREE.Color(1.0, 0.95, 1.15) }));
+  iris.position.z = 0.001;
+  const pupilWrap = new THREE.Group();
+  const pupil = new THREE.Mesh(new THREE.CircleGeometry(0.083, 48), new THREE.MeshBasicMaterial({ color: 0x07040f }));
+  pupil.position.z = 0.003;
+  const glint = new THREE.Mesh(new THREE.CircleGeometry(0.022, 24), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  glint.position.set(0.032, 0.034, 0.005);
+  pupilWrap.add(pupil, glint);
+  g.add(halo, ring, iris, pupilWrap);
+  g.traverse((o) => { if (o.material) { o.material.toneMapped = false; o.material.depthWrite = false; o.material.depthTest = false; o.renderOrder = 10; } });
+  halo.renderOrder = 9;
+  g.userData.pupil = pupilWrap;
+  return g;
+}
+
+/* arms */
+const arms = [];
+const ARM_REST = [
+  { x: -1.32, y: -0.72, z: 0.15, rz: -0.62, phase: 0 },
+  { x:  1.32, y: -0.72, z: 0.15, rz:  0.62, phase: Math.PI * 0.85 },
+];
+
+/* antenna tip glows (placed after the head model is measured) */
+const tipGlows = [];
+const ballMat = new THREE.MeshPhysicalMaterial({ color: "#8b62ff", emissive: "#6a3dff", emissiveIntensity: 1.5, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.14 });
+function addTipGlow(pos) {
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.118, 40, 28), ballMat);
+  ball.position.copy(pos);
+  head.add(ball);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0x9a6bff, transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending }));
+  s.scale.set(0.5, 0.5, 1);
+  s.position.copy(pos);
+  head.add(s);
+  tipGlows.push(s);
+}
+
+/* fallback robot if the CDN models can't be fetched */
+function fallbackHead() {
+  const g = new THREE.Group();
+  const shell = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), new THREE.MeshPhysicalMaterial({ color: "#2c2c35", roughness: 0.26, metalness: 0.15, clearcoat: 1, clearcoatRoughness: 0.06 }));
+  g.add(shell);
+  [-1, 1].forEach((s) => {
+    const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.12, 48), shell.material);
+    ear.rotation.z = Math.PI / 2; ear.position.set(s * 0.99, 0, 0); g.add(ear);
+    const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, 0.5, 16), new THREE.MeshStandardMaterial({ color: "#1a1a20", metalness: 0.8, roughness: 0.3 }));
+    rod.position.set(s * 0.42, 1.08, 0); rod.rotation.z = -s * 0.5; g.add(rod);
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.1, 32, 24), new THREE.MeshPhysicalMaterial({ color: "#7c4dff", emissive: "#5b2fff", emissiveIntensity: 0.8, roughness: 0.2, clearcoat: 1 }));
+    ball.position.set(s * 0.56, 1.3, 0); g.add(ball);
+  });
+  g.children.slice().forEach((o) => o.add(new THREE.Mesh(o.geometry, rimMaterial(0x8a5cff, 3.0, 1.1))));
+  return g;
+}
+function fallbackArm() {
+  const m = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.42, 16, 32), new THREE.MeshPhysicalMaterial({ color: "#1b1b21", roughness: 0.42, clearcoat: 0.35 }));
+  m.add(new THREE.Mesh(m.geometry, rimMaterial(0x8a5cff, 2.2, 1.8)));
+  return m;
+}
+
+/* ---------- load models ---------- */
+const loader = new GLTFLoader();
+const load = (url) => new Promise((res, rej) => loader.load(url, (g) => res(g.scene), undefined, rej));
+
+/* glossy black glass visor: rounded-rect shape wrapped onto the sphere surface */
+function sphereShape(w, h, r, cy, radius, segs = 48) {
+  const sh = new THREE.Shape();
+  const x0 = -w / 2, y0 = cy - h / 2, x1 = w / 2, y1 = cy + h / 2;
+  sh.moveTo(x0 + r, y0);
+  sh.lineTo(x1 - r, y0); sh.quadraticCurveTo(x1, y0, x1, y0 + r);
+  sh.lineTo(x1, y1 - r); sh.quadraticCurveTo(x1, y1, x1 - r, y1);
+  sh.lineTo(x0 + r, y1); sh.quadraticCurveTo(x0, y1, x0, y1 - r);
+  sh.lineTo(x0, y0 + r); sh.quadraticCurveTo(x0, y0, x0 + r, y0);
+  // tessellate the flat shape, then wrap every vertex onto the sphere
+  const pos = [];
+  const project = (p) => { const z = Math.sqrt(Math.max(radius * radius - p.x * p.x - p.y * p.y, 0.0001)); return [p.x, p.y, z]; };
+  const g2 = new THREE.ShapeGeometry(sh, segs);
+  const tess = (geom, iterations) => {
+    let p = Array.from(geom.toNonIndexed().attributes.position.array);
+    for (let it = 0; it < iterations; it++) {
+      const out = [];
+      for (let k = 0; k < p.length; k += 9) {
+        const A = p.slice(k, k + 3), B = p.slice(k + 3, k + 6), C = p.slice(k + 6, k + 9);
+        const mid = (u, v) => [(u[0] + v[0]) / 2, (u[1] + v[1]) / 2, 0];
+        const ab = mid(A, B), bc = mid(B, C), ca = mid(C, A);
+        out.push(...A, ...ab, ...ca, ...ab, ...B, ...bc, ...ca, ...bc, ...C, ...ab, ...bc, ...ca);
+      }
+      p = out;
+    }
+    return p;
+  };
+  const flat = tess(g2, 3);
+  for (let k = 0; k < flat.length; k += 3) pos.push(...project({ x: flat[k], y: flat[k + 1] }));
+  const out = new THREE.BufferGeometry();
+  out.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  out.computeVertexNormals();
+  // normals of a sphere patch are just the normalised positions
+  const nrm = out.attributes.normal;
+  for (let i = 0; i < nrm.count; i++) {
+    const v = new THREE.Vector3(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]).normalize();
+    nrm.setXYZ(i, v.x, v.y, v.z);
+  }
+  return out;
+}
+function addVisor(R) {
+  const bezel = new THREE.Mesh(sphereShape(1.86, 1.12, 0.46, -0.07, R * 1.03),
+    new THREE.MeshPhysicalMaterial({ color: "#0c0c10", roughness: 0.3, metalness: 0.3, clearcoat: 0.8, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 }));
+  const glass = new THREE.Mesh(sphereShape(1.74, 1.0, 0.4, -0.07, R * 1.036),
+    new THREE.MeshPhysicalMaterial({ color: "#000000", roughness: 0.12, metalness: 0.0, clearcoat: 1, clearcoatRoughness: 0.1, envMapIntensity: 0.9, polygonOffset: true, polygonOffsetFactor: -8, polygonOffsetUnits: -8 }));
+  bezel.renderOrder = 3; glass.renderOrder = 4;
+  head.add(bezel, glass);
+}
+
+function mountHead(model, measured) {
+  head.add(model);
+  head.updateMatrixWorld(true);
+
+  // locate the visor surface with raycasts so the eyes sit right on the glass
+  const ray = new THREE.Raycaster();
+  let R = 1;
+  if (measured) {
+    ray.set(new THREE.Vector3(0, 0, 5), new THREE.Vector3(0, 0, -1));
+    const hit = ray.intersectObject(model, true).find((h) => !h.object.material.isShaderMaterial);
+    if (hit) R = THREE.MathUtils.clamp(hit.point.length(), 0.85, 1.1);
+  }
+  if (measured) sphereNormals(model, R);
+  addVisor(R);
+  const EYE_X = 0.43, EYE_Y = -0.08;
+  [-1, 1].forEach((s) => {
+    const z = Math.sqrt(Math.max((R * 1.055) ** 2 - EYE_X * EYE_X - EYE_Y * EYE_Y, 0.01));
+    const eye = buildEye();
+    eye.position.set(s * EYE_X, EYE_Y, z);
+    eye.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), eye.position.clone().normalize());
+    head.add(eye);
+    eyes.push(eye);
+  });
+
+  // antenna tips: top-most point per side, then the centroid of the vertices
+  // around it gives the centre of the model's antenna ball
+  if (measured) {
+    const pts = [];
+    const v = new THREE.Vector3();
+    model.traverse((o) => {
+      if (!o.isMesh || o.material.isShaderMaterial) return;
+      const p = o.geometry.attributes.position;
+      for (let i = 0; i < p.count; i += 2) {
+        v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld);
+        head.worldToLocal(v);
+        if (v.y > 0.75 && Math.abs(v.x) > 0.15) pts.push(v.clone());
+      }
+    });
+    [-1, 1].forEach((side) => {
+      const mine = pts.filter((q) => Math.sign(q.x) === side);
+      if (!mine.length) return;
+      const top = mine.reduce((a, b) => (b.y > a.y ? b : a));
+      const near = mine.filter((q) => q.distanceTo(top) < 0.2);
+      const c = near.reduce((a, b) => a.add(b), new THREE.Vector3()).divideScalar(near.length);
+      c.y = Math.max(c.y, top.y - 0.1);
+      addTipGlow(c);
+    });
+  } else {
+    addTipGlow(new THREE.Vector3(-0.56, 1.3, 0));
+    addTipGlow(new THREE.Vector3(0.56, 1.3, 0));
+  }
+}
+
+/* the shell is a sphere: snap normals of on-sphere vertices to the true sphere normal
+   so reflections glide smoothly like the polished plastic in the reference */
+function sphereNormals(root, R) {
+  const v = new THREE.Vector3(), inv = new THREE.Matrix4(), nm = new THREE.Matrix3();
+  root.updateMatrixWorld(true);
+  root.traverse((o) => {
+    if (!o.isMesh || o.material.isShaderMaterial) return;
+    const p = o.geometry.attributes.position, n = o.geometry.attributes.normal;
+    if (!n) return;
+    inv.copy(o.matrixWorld).invert();
+    nm.getNormalMatrix(inv).transpose();
+    for (let i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld).sub(head.position);
+      const d = v.length();
+      if (Math.abs(d - R) < R * 0.07) {
+        v.normalize().applyMatrix3(nm).normalize();
+        n.setXYZ(i, v.x, v.y, v.z);
+      }
+    }
+    n.needsUpdate = true;
+  });
+}
+
+function normaliseHead(root) {
+  const box = new THREE.Box3().setFromObject(root);
+  const size = box.getSize(new THREE.Vector3());
+  const s = 2 / size.z;                                         // sphere depth → diameter 2
+  root.scale.setScalar(s);
+  root.updateMatrixWorld(true);
+  const b2 = new THREE.Box3().setFromObject(root);
+  const c = b2.getCenter(new THREE.Vector3());
+  root.position.set(-c.x, -(b2.min.y + 1), -c.z);             // sphere centre at origin
+  return root;
+}
+function normaliseArm(root) {
+  const box = new THREE.Box3().setFromObject(root);
+  const size = box.getSize(new THREE.Vector3());
+  root.scale.setScalar(0.78 / size.y);
+  root.updateMatrixWorld(true);
+  const c = new THREE.Box3().setFromObject(root).getCenter(new THREE.Vector3());
+  root.position.sub(c);
+  const g = new THREE.Group();
+  g.add(root);
+  return g;
+}
+
+function mountArms(make) {
+  ARM_REST.forEach((r) => {
+    const a = make();
+    a.position.set(r.x, r.y, r.z);
+    a.rotation.z = r.rz;
+    a.userData = r;
+    body.add(a);
+    arms.push(a);
+  });
+}
+
+Promise.allSettled([load(HEAD_GLB), load(ARM_GLB)]).then(([h, a]) => {
+  if (h.status === "fulfilled") {
+    mountHead(prepareModel(normaliseHead(h.value), { glossy: true, useMap: false, tint: "#4a4a56", rim: { color: 0x8a5cff, power: 4.5, strength: 0.32 } }), true);
+  } else {
+    console.warn("Head GLB failed, using fallback", h.reason);
+    mountHead(fallbackHead(), false);
+  }
+  if (a.status === "fulfilled") {
+    const tpl = prepareModel(a.value, { glossy: false, useMap: false, smooth: true, tint: "#1d1d23", rim: { color: 0x8a5cff, power: 2.6, strength: 1.05 } });
+    const copies = [tpl, tpl.clone(true)];
+    mountArms(() => normaliseArm(copies.shift()));
+  } else {
+    console.warn("Arm GLB failed, using fallback", a.reason);
+    mountArms(fallbackArm);
+  }
+  loaderEl.classList.add("hide");
+  robot.scale.setScalar(0.001);
+  intro = 0;
+}).catch((err) => { console.error(err); loaderEl.classList.add("hide"); });
+
+/* ---------- layout: place robot right on desktop, top-centre on mobile ---------- */
+let W = 1, H = 1, anchor = { x: 0, y: 0 }, isMobile = false;
+const ROBOT_UNITS = 3.4;   // world height incl. antennas, arms & float room
+
+function layout() {
+  const r = hero.getBoundingClientRect();
+  W = r.width; H = r.height;
+  isMobile = W <= 860;
+  renderer.setSize(W, H, false);
+  composer.setSize(W, H);
+  bloom.setSize(W, H);
+
+  let px;
+  if (isMobile) {
+    const copyTop = document.querySelector(".copy").getBoundingClientRect().top - r.top;
+    const navH = 62;
+    const room = Math.max(copyTop - navH, 220);
+    px = Math.min(room * 0.92, W * 0.82);
+    anchor = { x: W / 2, y: navH + room * 0.5 };
+  } else {
+    px = Math.min(H * 0.62, W * 0.4, 640);
+    anchor = { x: W * 0.695, y: H * 0.5 + 8 };
+  }
+  camera.aspect = W / H;
+  const t = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  camera.position.z = (ROBOT_UNITS * H) / (px * 2 * t);
+  camera.setViewOffset(W, H, W / 2 - anchor.x, H / 2 - anchor.y, W, H);
+  camera.updateProjectionMatrix();
+
+  loaderEl.style.left = anchor.x + "px";
+  loaderEl.style.top = anchor.y + "px";
+}
+new ResizeObserver(layout).observe(hero);
+layout();
+
+/* ---------- pointer tracking ---------- */
+const target = { x: 0, y: 0 };
+const look = { x: 0, y: 0 };
+let lastMove = -10;
+function onPoint(cx, cy) {
+  const r = hero.getBoundingClientRect();
+  const dx = cx - r.left - anchor.x;
+  const dy = cy - r.top - anchor.y;
+  const rx = isMobile ? W * 0.5 : Math.max(W * 0.55, 500);
+  const ry = isMobile ? H * 0.5 : Math.max(H * 0.55, 400);
+  target.x = THREE.MathUtils.clamp(dx / rx, -1.2, 1.2);
+  target.y = THREE.MathUtils.clamp(dy / ry, -1.2, 1.2);
+  lastMove = clock.elapsedTime;
+}
+window.addEventListener("pointermove", (e) => onPoint(e.clientX, e.clientY), { passive: true });
+window.addEventListener("pointerdown", (e) => onPoint(e.clientX, e.clientY), { passive: true });
+window.addEventListener("touchmove", (e) => { const t = e.touches[0]; if (t) onPoint(t.clientX, t.clientY); }, { passive: true });
+
+/* ---------- animate ---------- */
+const clock = new THREE.Clock();
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let intro = -1;
+let nextBlink = 2.5, blinkT = -1;
+let visible = true;
+new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(hero);
+
+function tick() {
+  requestAnimationFrame(tick);
+  if (!visible) return;
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  // idle wander when the pointer is still
+  if (t - lastMove > 3.5) {
+    target.x = Math.sin(t * 0.45) * 0.45;
+    target.y = Math.sin(t * 0.31 + 1.2) * 0.2;
+  }
+  const ease = 1 - Math.pow(0.0025, dt);
+  look.x += (target.x - look.x) * ease;
+  look.y += (target.y - look.y) * ease;
+
+  // intro pop
+  if (intro >= 0 && intro < 1) {
+    intro = Math.min(1, intro + dt * 1.4);
+    const k = intro, s = 1 + 2.4 * Math.pow(k - 1, 3) + 1.4 * Math.pow(k - 1, 2); // easeOutBack
+    robot.scale.setScalar(Math.max(0.001, s));
+  }
+
+  const m = reduce ? 0.25 : 1;
+  const bob = Math.sin(t * 1.6) * 0.09 * m;
+  robot.position.y = bob;
+
+  head.rotation.y = look.x * 0.5;
+  head.rotation.x = look.y * 0.42;
+  head.rotation.z = -look.x * 0.06 + Math.sin(t * 1.1) * 0.015 * m;
+  body.rotation.y = look.x * 0.28;
+  body.rotation.x = look.y * 0.12;
+
+  // arms float up and down out of phase, with a little flap
+  arms.forEach((a) => {
+    const r = a.userData;
+    const w = Math.sin(t * 2.0 + r.phase);
+    a.position.y = r.y + w * 0.13 * m - bob * 0.35;
+    a.position.x = r.x + Math.sign(r.x) * look.x * -0.04;
+    a.rotation.z = r.rz + w * 0.12 * Math.sign(r.x) * m;
+    a.rotation.x = Math.sin(t * 1.3 + r.phase) * 0.08 * m;
+  });
+
+  // pupils follow cursor inside the iris
+  const px = THREE.MathUtils.clamp(look.x * 0.075, -0.07, 0.07);
+  const py = THREE.MathUtils.clamp(-look.y * 0.06, -0.06, 0.06);
+  eyes.forEach((e) => e.userData.pupil.position.set(px, py, 0));
+
+  // blink
+  if (t > nextBlink && blinkT < 0) blinkT = 0;
+  if (blinkT >= 0) {
+    blinkT += dt;
+    const p = blinkT / 0.16;
+    const sy = p < 1 ? 1 - p : p < 2 ? p - 1 : 1;
+    eyes.forEach((e) => e.scale.set(1, Math.max(0.08, sy), 1));
+    if (p >= 2) { blinkT = -1; nextBlink = t + 2.5 + Math.random() * 3.5; }
+  }
+
+  // glows breathe with the float
+  const breathe = 0.85 + Math.sin(t * 1.6) * 0.15;
+  floorGlow.scale.set(3.4 - bob * 3, 0.42 - bob * 0.4, 1);
+  floorGlow.material.opacity = 0.7 + (0.09 - bob) * 1.5;
+  tipGlows.forEach((s) => (s.material.opacity = 0.7 * breathe + 0.15));
+
+  composer.render();
+}
+tick();
+</script>
+</body>
+</html>
